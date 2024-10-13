@@ -12,7 +12,7 @@ header("Content-Type: application/json; charset=UTF-8");
 $daoEntity = new EntityDao();
 
 // Obtenemos los datos de la base de datos
-$resultado = $daoEntity->getEntity("usuarios", [], true);
+$resultado = $daoEntity->getEntity("usuarios", ["rol","estado","telefono","usuario_id","contrasena"], true);
 
 // Devolvemos los datos como JSON
 echo json_encode($resultado);

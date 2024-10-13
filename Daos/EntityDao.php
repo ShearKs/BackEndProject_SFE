@@ -38,23 +38,30 @@ class EntityDao
                     $columna = $relacionItem['columna_relacion'];
                     $tablaRelacionada = $relacionItem['tabla_relacionada'];
                     $columnaReferenciada = $relacionItem['columna_referenciada'];
+                    $tipoRelacion = $relacionItem['tipo_relacion'];
 
                     // Obtener los datos relacionados para cada registro en la tabla principal
                     foreach ($entidad as &$registro) {
-                        if (isset($registro[$columna])) {
+                        if ($tipoRelacion == 'saliente' && isset($registro[$columna])) {
+                            // Si la relación es saliente, buscar en la tabla relacionada usando el valor del registro actual
                             $valorReferencia = $registro[$columna];
-
-                            // Consulta para obtener los datos de la tabla relacionada
                             $sqlRelacion = "SELECT * FROM `$tablaRelacionada` WHERE `$columnaReferenciada` = '$valorReferencia'";
-                            $resultadoRelacion = $this->conexion->query($sqlRelacion);
+                        } elseif ($tipoRelacion == 'entrante') {
+                            // Si la relación es entrante, buscar en la tabla relacionada usando el ID del registro actual
+                            $valorReferencia = $registro['id'];
+                            $sqlRelacion = "SELECT * FROM `$tablaRelacionada` WHERE `$columna` = '$valorReferencia'";
+                        } else {
+                            continue; // Si no es ni entrante ni saliente, omitir
+                        }
 
-                            if ($resultadoRelacion && $resultadoRelacion->num_rows > 0) {
-                                // Combinar los datos de la tabla relacionada con los datos de la tabla principal
-                                while ($filaRelacion = $resultadoRelacion->fetch_assoc()) {
-                                    foreach ($filaRelacion as $key => $value) {
-                                        // Prefijar el nombre de la tabla relacionada al nombre del campo para evitar conflictos
-                                        $registro["{$tablaRelacionada}_{$key}"] = $value;
-                                    }
+                        $resultadoRelacion = $this->conexion->query($sqlRelacion);
+
+                        if ($resultadoRelacion && $resultadoRelacion->num_rows > 0) {
+                            // Combinar los datos de la tabla relacionada con los datos de la tabla principal
+                            while ($filaRelacion = $resultadoRelacion->fetch_assoc()) {
+                                foreach ($filaRelacion as $key => $value) {
+                                    // Prefijar el nombre de la tabla relacionada al nombre del campo para evitar conflictos
+                                    $registro[$key] = $value;
                                 }
                             }
                         }
@@ -62,6 +69,21 @@ class EntityDao
                 }
             }
         }
+
+
+
+        // Quitar los campos que se han especificado
+        if (!empty($camposAQuitar)) {
+            foreach ($entidad as &$registro) {
+                foreach ($camposAQuitar as $campo) {
+                    // Verificar si el campo existe en el registro, sin importar su valor
+                    if (array_key_exists($campo, $registro)) {
+                        unset($registro[$campo]);
+                    }
+                }
+            }
+        }
+
 
         return $entidad;
     }
