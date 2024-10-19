@@ -80,67 +80,11 @@ class EntityDao
             }
         }
 
-        return $entidad;
-    }
-
-
-    //METODO ALTERNATIVO GET ENTITY EN EL QUE TU LE PASAS LOS CAMPOS QUE QUIERES Y TE DEVUELVE LOS DATOS....
-    public function getEntityAlternative($tabla, $camposElegir = [], $completo = false)
-    {
-
-        $entidad = [];
-        $sql = "";
-        $camposSeleccionados = "";
-
-        if (empty($camposElegir)) {
-            $camposSeleccionados = "*";
-        } else {
-            //$camposSeleccionados = implode(', ', $camposElegir);
-
-            $camposSeleccionados = implode(', ', array_map(fn($campo) => "$campo AS" . strtoupper($campo), $camposElegir));
-        }
-
-
-        $sql = "SELECT `$camposSeleccionados`  FROM `$tabla`  ";
-
-        if ($completo) {
-            //Si es completo tenemos que obtener las relaciones de la tabla
-            $relaciones = $this->getRelations($tabla);
-
-            //Por cada relación vamos a modificar el select para sacar más campos
-            foreach ($relaciones as $relacion) {
-
-                if (isset($relacion['columna_relacion']) && isset($relacion['tabla_relacionada']) && isset($relacion['columna_referenciada'])) {
-
-                    //Recogemos todos los datos de esa relación
-                    $tablaRelacionada = $relacion['tabla_relacionada'];
-                    $columna = $relacion['columna_relacion'];
-                    $columnaReferencia = $relacion['columna_referenciada'];
-
-                    $tipoRelacion = $relacion['tipo_relacion'];
-
-                    if ($tipoRelacion == 'saliente') {
-
-                        $sql .= " LEFT JOIN `$tablaRelacionada` ON `$tabla` . `$columna` = `$tablaRelacionada`.`$columnaReferencia`; ";
-                    } elseif ($tipoRelacion == 'entrante') {
-                        $sql .= " LEFT JOIN `$tablaRelacionada` ON `$tablaRelacionada`.`$columna` = `$tabla`.`id` ";
-                    }
-                }
-            }
-        }
-
-        //Ejecutamos la consulta
-        $resultado = $this->conexion->query($sql);
-
-        //Procesamos los datos
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($fila = $resultado->fetch_assoc()) {
-                $entidad[] = $fila;
-            }
-        }
 
         return $entidad;
     }
+
+
 
     //Función que ejecuta el getEntity pero coje solo un elemento el filtrado por id.
     public function getById($id, $tabla, $camposAQuitar)
@@ -324,83 +268,88 @@ class EntityDao
     }
 
 
+
     public function getEntityAlternative_3($tabla, $camposElegir = [], $completo = false)
     {
         $entidad = [];
-        $camposSeleccionados = "";
-    
-        // Inicializamos arrays para campos de la tabla principal y las relaciones
         $camposPrincipal = [];
-        $camposRelaciones = [];
-    
-        // Clasificar los campos según su origen
+
+        // Inicializar campos de la tabla principal
         foreach ($camposElegir as $campo) {
-            $partes = explode('_', $campo);
-            $tablaCampo = count($partes) > 1 ? $partes : $tabla;
-            if ($tablaCampo === $tabla) {
+            if (is_string($campo)) {
                 $camposPrincipal[] = $campo;
-            } else {
-                $camposRelaciones[$tablaCampo][] = $campo;
             }
         }
-    
+
+        // Asegurarse de incluir 'id'
+        if (!in_array('id', $camposPrincipal)) {
+            $camposPrincipal[] = 'id';
+        }
+
         // Construir la parte SELECT de la tabla principal
-        if (empty($camposPrincipal)) {
-            $camposPrincipalSeleccionados = "$tabla.*";
-        } else {
-            $camposPrincipalSeleccionados = implode(', ', array_map(fn($campo) => "UPPER($tabla.$campo) AS " . strtoupper($campo), $camposPrincipal));
-        }
-    
-        // Construir la parte SELECT de las relaciones
-        $camposRelacionesSeleccionados = [];
-        foreach ($camposRelaciones as $tablaRelacionada => $campos) {
-            foreach ($campos as $campo) {
-                $camposRelacionesSeleccionados[] = "UPPER($tablaRelacionada.$campo) AS " . strtoupper($campo);
-            }
-        }
-    
-        // Combinar todos los campos seleccionados
-        $camposSeleccionados = implode(', ', array_merge([$camposPrincipalSeleccionados], $camposRelacionesSeleccionados));
-    
-        // Construir la sentencia SQL inicial
-        $sql = "SELECT $camposSeleccionados FROM `$tabla`";
-    
-        // Agregar JOINs si es necesario
+        $camposPrincipalSeleccionados = empty($camposPrincipal)
+            ? "$tabla.*"
+            : implode(', ', array_map(fn($campo) => "$tabla.$campo", $camposPrincipal));
+
+        // Inicializar SQL
+        $sql = "SELECT $camposPrincipalSeleccionados ";
+
+        // Agregar INNER JOINs si es necesario
         if ($completo) {
-            // Obtener las relaciones de la tabla
             $relaciones = $this->getRelations($tabla);
-    
+            $joinClauses = [];
+
             foreach ($relaciones as $relacion) {
                 if (isset($relacion['columna_relacion']) && isset($relacion['tabla_relacionada']) && isset($relacion['columna_referenciada'])) {
                     $tablaRelacionada = $relacion['tabla_relacionada'];
                     $columna = $relacion['columna_relacion'];
                     $columnaReferencia = $relacion['columna_referenciada'];
-                    $tipoRelacion = $relacion['tipo_relacion'];
-    
-                    if ($tipoRelacion == 'saliente') {
-                        $sql .= " LEFT JOIN `$tablaRelacionada` ON `$tabla`.`$columna` = `$tablaRelacionada`.`$columnaReferencia`";
-                    } elseif ($tipoRelacion == 'entrante') {
-                        $sql .= " LEFT JOIN `$tablaRelacionada` ON `$tablaRelacionada`.`$columna` = `$tabla`.`id`";
+
+                    // Agregar cláusula JOIN
+                    $joinClauses[] = "INNER JOIN `$tablaRelacionada` ON `$tabla`.`id` = `$tablaRelacionada`.`$columna`";
+                }
+            }
+
+            // Concatenar las cláusulas JOIN
+            if (!empty($joinClauses)) {
+                $sql .= ' FROM `' . $tabla . '` ' . implode(' ', $joinClauses);
+            }
+        } else {
+            $sql .= "FROM `$tabla` "; // Si no hay JOINs, se agrega la tabla principal
+        }
+
+        // Agregar los campos seleccionados de las relaciones
+        if ($completo) {
+            foreach ($relaciones as $relacion) {
+                if (isset($relacion['tabla_relacionada']) && isset($relacion['columna_relacion'])) {
+                    $tablaRelacionada = $relacion['tabla_relacionada'];
+                    if ($this->checkColumnExists($tablaRelacionada, 'nombre')) {
+                        $sql .= ", `$tablaRelacionada`.`nombre` AS nombre"; // Asegúrate de que esta columna exista
+                    }
+                    if ($this->checkColumnExists($tablaRelacionada, 'nombre_usuario')) {
+                        $sql .= ", `$tablaRelacionada`.`nombre_usuario` AS nombre_usuario"; // Para la tabla usuarios
                     }
                 }
             }
         }
-    
+
         // Ejecutar la consulta
         $resultado = $this->conexion->query($sql);
-    
-        // Procesar los resultados
+
+        // Procesar resultados
         if ($resultado && $resultado->num_rows > 0) {
             while ($fila = $resultado->fetch_assoc()) {
-                $entidad[] = $fila;
+                $entidad[] = $fila; // Asegúrate de que todos los campos sean recuperados
             }
         }
-    
+
         return $entidad;
     }
-    
-    
 
-
-
+    // Método para verificar si una columna existe en una tabla
+    private function checkColumnExists($tabla, $columna)
+    {
+        $query = $this->conexion->query("SHOW COLUMNS FROM `$tabla` LIKE '$columna'");
+        return $query && $query->num_rows > 0;
+    }
 }

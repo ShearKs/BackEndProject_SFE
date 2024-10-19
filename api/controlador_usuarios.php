@@ -14,9 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     http_response_code(200);
     exit;
 }
-$data = json_decode(file_get_contents('php://input'),true);
+$data = json_decode(file_get_contents('php://input'), true);
 
-$modoCrud = isset($data['modo']) ? $data['modo'] : 'read';
+
+$modoCrud = isset($data['modo']) ? $data['modo'] : 'create';
 $entidad = isset($data['entidad']) ? $data['entidad'] : 'entidad';
 $id = isset($data['id']) ? intval($data['id']) : 0;
 $entityData = isset($data['entityData']) ? $data['entityData'] : '';
@@ -26,20 +27,19 @@ $daoEntity = new EntityDao();
 
 switch ($modoCrud) {
 
-    // Funcionalidad Crud
-
     case 'create':
+      
         $resultado = $daoEntity->insertEntity($entidad, $entityData);
         break;
     case 'read':
-        $resultado = $daoEntity->getEntity("trabajadores",[], false);
+        $resultado = $daoEntity->getEntity($entidad, [], false);
         break;
     case 'update':
         $resultado = $daoEntity->editEntity($id, $entidad, $entityData);
         break;
 
     case 'delete':
-        $resultado = $daoEntity->deleteById($id, "trabajadores");
+        $resultado = $daoEntity->deleteById($id, "usuarios");
         break;
 
     default:
