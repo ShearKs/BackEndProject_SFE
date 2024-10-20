@@ -10,7 +10,7 @@ class EntityDao
         $this->conexion = Conexion::getConexion();
     }
 
-    public function getEntity($tabla, $completo,$camposAQuitar = [])
+    public function getEntity($tabla, $completo, $camposAQuitar = [])
     {
         $entidad = [];
 
@@ -138,11 +138,12 @@ class EntityDao
 
         return $estado ?
             [
-             "status" => "exito",
-             "mensaje" => "Se hizo correctamente el insertado de entidad con id: " . $this->conexion->insert_id,
-             "id_insert" => $this->conexion->insert_id] :
+                "status" => "exito",
+                "mensaje" => "Se hizo correctamente el insertado de entidad con id: " . $this->conexion->insert_id,
+                "id_insert" => $this->conexion->insert_id
+            ] :
 
-             
+
             ["status" => "error", "mensaje" => "Error al insertar un valor en la entidad, motivo : ", $sentencia->error];
     }
 
@@ -164,6 +165,7 @@ class EntityDao
 
     public function editEntity($id, $nombreTabla, $entidadActualizada)
     {
+
 
         if (empty($entidadActualizada)) {
 
@@ -220,6 +222,50 @@ class EntityDao
 
         return $tipos;
     }
+
+
+
+    public function existeRegistro($id, $tabla)
+    {
+
+
+        $sql = "SELECT id FROM `$tabla` WHERE id = ? ";
+
+
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bind_param('i', $id);
+
+        $estado = $sentencia->execute();
+        $resultado = $sentencia->get_result();
+
+        header('Content-Type: application/json'); // Asegúrate de establecer el tipo de contenido adecuado
+        echo json_encode(['existe' => $resultado->num_rows > 0]);
+        die;
+
+        return ($resultado->num_rows === 1);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private function esFechaValida($valor)
