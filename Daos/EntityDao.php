@@ -2,7 +2,7 @@
 
 class EntityDao
 {
-    private $conexion;
+    protected $conexion;
 
     public function __construct()
     {
@@ -10,7 +10,7 @@ class EntityDao
         $this->conexion = Conexion::getConexion();
     }
 
-    public function getEntity($tabla, $camposAQuitar = [], $completo)
+    public function getEntity($tabla, $completo,$camposAQuitar = [])
     {
         $entidad = [];
 
@@ -112,7 +112,10 @@ class EntityDao
 
     //Método para insertar un registro en una tabla
     public function insertEntity($tabla, $data)
+
     {
+
+        $relaciones = $this->getRelations($tabla);
 
         //Lo primero que hacemos es obtener los nombres de las columnas y los valores a isnertar
         //Ejemplo de lo que nos llega "nombre, email, contraseña"
@@ -123,19 +126,23 @@ class EntityDao
 
         //Preparamos la consulta
         $sql = "INSERT INTO $tabla ($columnas) VALUES ($placeholders)";
-        //Preparamos la sentencia
-        $sentencia = $this->conexion->prepare($sql);
 
+        $sentencia = $this->conexion->prepare($sql);
         //Cadenad de los tipos para los bindParam
-        $tipos = implode(', ', $this->tiposArray($data));
+        $tipos = implode('', $this->tiposArray($data));
 
         //Vinculamos los parámetros
-        $sentencia->bind_param($tipos, ...$data);
+        $sentencia->bind_param($tipos, ...array_values($data));
 
         $estado = $sentencia->execute();
 
         return $estado ?
-            ["status" => "exito", "mensaje" => "Se hizo correctamente el insertado de entidad con id: " . $this->conexion->insert_id] :
+            [
+             "status" => "exito",
+             "mensaje" => "Se hizo correctamente el insertado de entidad con id: " . $this->conexion->insert_id,
+             "id_insert" => $this->conexion->insert_id] :
+
+             
             ["status" => "error", "mensaje" => "Error al insertar un valor en la entidad, motivo : ", $sentencia->error];
     }
 
@@ -177,7 +184,6 @@ class EntityDao
         //Obtenemos los tipos de datos actualizar
         $tipos = implode('', $this->tiposArray($entidadActualizada)) . 'i';
 
-
         //Vinculamos los valores y el id
         $valores = array_merge(array_values($entidadActualizada), [$id]);
         $sentencia->bind_param($tipos, ...$valores);
@@ -213,6 +219,13 @@ class EntityDao
         }
 
         return $tipos;
+    }
+
+
+    private function esFechaValida($valor)
+    {
+        // Comprobar si es una fecha en formato 'YYYY-MM-DD' o 'YYYY-MM-DD HH:MM:SS'
+        return preg_match('/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/', $valor) === 1;
     }
 
     //Función que se encarga de obtener todas las relaciones de una tabla...
