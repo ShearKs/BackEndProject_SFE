@@ -46,7 +46,9 @@ switch ($modoCrud) {
         $resultado = $usuarioDao->actualizarUsuario($entidad,$entityData);
         break;
     case 'delete':
+        $usuarioDao->beginTransaction();
         $resultado = $usuarioDao->deleteById($id, "usuarios");
+        $usuarioDao->commit();
         break;
 
     default:

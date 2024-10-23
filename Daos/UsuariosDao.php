@@ -28,19 +28,19 @@ class UsuariosDao extends EntityDao
 
         $resultado = $this->conexion->query($sql);
 
-
         //Si hemos obtenido algún usuario...
         if ($resultado->num_rows > 0) {
             while ($fila = $resultado->fetch_assoc()) {
                 $usuarios[] = $fila;
             }
         }
-
         return $usuarios;
     }
 
     public function insertarUsuario($tabla, $datosUsuario)
     {
+
+    
         $camposDeseados = ['nombre_usuario', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_nac'];
         $infoUser = [];
         $infoAdicional = [];
@@ -67,6 +67,7 @@ class UsuariosDao extends EntityDao
             $insertOther = $this->insertEntity($tablaAdicional, ['usuario_id' => $insertUser['id_insert']]);
             return $insertOther;
         } else {
+            $this->rollback();
             return ['error' => "Ha habido algún error al insertar el usuario en la tabla."];
         }
     }
@@ -74,12 +75,14 @@ class UsuariosDao extends EntityDao
     //Igual que hemos con el delete vamos a tener que hacer algo parecido ya que no nos va servir el método básico para actualizar "editEntity"
     public function actualizarUsuario($tabla, $datosUserUp)
     {
+        $this->beginTransaction();
 
-
-        //Obtenemos el id que vamos a actualizar
+        //Obtenemos el id del usuario que vamos a actualizar
         $id = $datosUserUp['id'];
+
         //el id del usuario si es trabajador o cliente
         $idUsuario = $datosUserUp['usuario_id'];
+
         $tablaAdicional = $datosUserUp['tipo_usuario'] === 'cliente' ? 'clientes' : 'trabajadores';
 
         //Campos que vamos a querer que se actualicen en 'usuario'
@@ -101,20 +104,35 @@ class UsuariosDao extends EntityDao
 
         if ($usuariosUpdate["status"] === 'exito') {
 
-            //Si la información de usuarios ha sido correctamente modificada nos tenemos que encargar de ver si ha cambiado de cliente a trabjador y viceversa..
+            //Si no existe registro significará que tenemos que actualizar el tipo de usuario y significa que cambiara de cliente a trabjador o viceversa 
+            //si no, no tenemos que cambiar nada.
 
+            if (!$this->existeRegistro($id, $tablaAdicional, 'usuario_id')) {
 
-            //Comprobamos si hemos modificado el tipo de usuario
-            $modificadoUser = !$this->existeRegistro($idUsuario, $tablaAdicional);
+                //si entramos aquí significa que hay que actualizar
+                $tablaUpdate = ($tablaAdicional === 'clientes') ? 'trabjadores' : 'clientes';
 
-            echo "eta";
-            echo $modificadoUser;
-            die;
+                //Primero eliminamos en la tabla donde estaba
+                $mensajeElim = $this->deleteById($idUsuario, $tablaUpdate);
 
+                if ($mensajeElim['status'] !== 'exito') {
+                    return ['status' => 'error', 'mensaje' => 'Ha habido algún error a eliminar el tipo de usuario antiguo...'];
+                }
 
-            return ['status' => 'exito', 'mensaje' => 'Se ha conseguido editar el usuario de forma satisfactoria!'];
-        } else {
-            return ['status' => 'error', 'mensaje' => 'Ha habido algún error a actualizar el usuario...'];
+                //Ahora insertamos el usuario con su nuevo tipo
+                $mensajeInsert = $this->insertEntity($tablaAdicional, ["usuario_id" => $id]);
+
+                if ($mensajeInsert['status'] !== 'exito') {
+
+                    return ['status' => 'error', 'mensaje' => 'Ha habido algún error al insertar el tipo de usuario...'];
+                }
+
+                //Si está todo bien hacemos todos los cambios...
+                $this->conexion->commit();
+                return ['status' => 'exito', 'mensaje' => 'Se ha conseguido editar el usuario de forma satisfactoria!'];
+            } else {
+                return ['status' => 'error', 'mensaje' => 'Ha habido algún error a actualizar el usuario...'];
+            }
         }
     }
 }

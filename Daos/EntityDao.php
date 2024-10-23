@@ -1,5 +1,7 @@
 <?php
 
+include_once 'Conexion.php';
+
 class EntityDao
 {
     protected $conexion;
@@ -8,9 +10,12 @@ class EntityDao
     {
         // Usamos la clase que maneja la conexión a la BDD
         $this->conexion = Conexion::getConexion();
+
+        //De forma predterminada no podremos hacer cambios...
+        //$this->conexion->autocommit(false);
     }
 
-    public function getEntity($tabla, $completo, $camposAQuitar = [])
+    public function getEntity($tabla, $completo)
     {
         $entidad = [];
 
@@ -69,16 +74,16 @@ class EntityDao
         }
 
         // Quitar los campos que se han especificado
-        if (!empty($camposAQuitar)) {
-            foreach ($entidad as &$registro) {
-                foreach ($camposAQuitar as $campo) {
-                    // Verificar si el campo existe en el registro, sin importar su valor
-                    if (array_key_exists($campo, $registro)) {
-                        unset($registro[$campo]);
-                    }
-                }
-            }
-        }
+        // if (!empty($camposAQuitar)) {
+        //     foreach ($entidad as &$registro) {
+        //         foreach ($camposAQuitar as $campo) {
+        //             // Verificar si el campo existe en el registro, sin importar su valor
+        //             if (array_key_exists($campo, $registro)) {
+        //                 unset($registro[$campo]);
+        //             }
+        //         }
+        //     }
+        // }
 
 
         return $entidad;
@@ -114,8 +119,7 @@ class EntityDao
     public function insertEntity($tabla, $data)
 
     {
-
-        $relaciones = $this->getRelations($tabla);
+        //$relaciones = $this->getRelations($tabla);
 
         //Lo primero que hacemos es obtener los nombres de las columnas y los valores a isnertar
         //Ejemplo de lo que nos llega "nombre, email, contraseña"
@@ -142,7 +146,6 @@ class EntityDao
                 "mensaje" => "Se hizo correctamente el insertado de entidad con id: " . $this->conexion->insert_id,
                 "id_insert" => $this->conexion->insert_id
             ] :
-
 
             ["status" => "error", "mensaje" => "Error al insertar un valor en la entidad, motivo : ", $sentencia->error];
     }
@@ -199,38 +202,35 @@ class EntityDao
             : ["status" => "error", "mensaje" => "Error al actualizar el registro ,motivo: " . $sentencia->error];
     }
 
-    //Función que devuelve en un array los tipos de un array 
+    //Función que devuelve en un array tios de variables pasadas 
     private function tiposArray($data)
     {
 
         $tipos = [];
 
-        foreach ($data as $indice => $valor) {
+        foreach ($data as  $tipo) {
 
-            if (is_int($valor)) {
+            if (is_int($tipo)) {
                 $tipos[] = 'i';
-            } elseif (is_double($valor) || is_float($valor)) {
+            } elseif (is_double($tipo) || is_float($tipo)) {
                 $tipos[] = 'd';
-            } elseif (is_string($valor)) {
+            } elseif (is_string($tipo)) {
                 $tipos[] = 's';
-            } elseif (is_null($valor)) {
+            } elseif (is_null($tipo)) {
                 $tipos[] = 's';
             } else {
-                throw new Exception('Error, tipo no soportado...' . gettype($valor));
+                throw new Exception('Error, tipo no soportado...' . gettype($tipo));
             }
         }
 
         return $tipos;
     }
 
-
-
-    public function existeRegistro($id, $tabla)
+    public function existeRegistro($id, $tabla, $idAjeno = "")
     {
-
-
-        $sql = "SELECT id FROM `$tabla` WHERE id = ? ";
-
+        $sql = "SELECT id FROM $tabla WHERE ";
+        $idTabla = !empty($idAjeno) ? $idAjeno : "id";
+        $sql .= " $idTabla = ? ";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->bind_param('i', $id);
@@ -238,35 +238,8 @@ class EntityDao
         $estado = $sentencia->execute();
         $resultado = $sentencia->get_result();
 
-        header('Content-Type: application/json'); // Asegúrate de establecer el tipo de contenido adecuado
-        echo json_encode(['existe' => $resultado->num_rows > 0]);
-        die;
-
         return ($resultado->num_rows === 1);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private function esFechaValida($valor)
     {
@@ -410,5 +383,23 @@ class EntityDao
     {
         $query = $this->conexion->query("SHOW COLUMNS FROM `$tabla` LIKE '$columna'");
         return $query && $query->num_rows > 0;
+    }
+
+    //Métodos para confirmar o volver átras.
+
+    public function beginTransaction()
+    {
+        $this->conexion->begin_transaction();
+    }
+
+
+    public function commit()
+    {
+        $this->conexion->commit();
+    }
+
+    public function rollback()
+    {
+        $this->conexion->rollback();
     }
 }
