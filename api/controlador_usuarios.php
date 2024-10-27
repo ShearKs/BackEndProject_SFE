@@ -37,13 +37,13 @@ switch ($modoCrud) {
 
     case 'create':
 
-        $resultado = $usuarioDao->insertarUsuario($entidad, $entityData);
+        //$resultado = $usuarioDao->insertarUsuario($entityData);
         break;
     case 'read':
         $resultado = $usuarioDao->getUsuarios();
         break;
     case 'update':
-        $resultado = $usuarioDao->actualizarUsuario($entidad,$entityData);
+        $resultado = $usuarioDao->actualizarUsuario($entityData);
         break;
     case 'delete':
         $usuarioDao->beginTransaction();

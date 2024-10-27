@@ -9,7 +9,7 @@ include_once '../Daos/Conexion.php'; // Asegúrate de incluir también la clase 
 header("Access-Control-Allow-Origin: *");  
 header("Content-Type: application/json; charset=UTF-8");  
 
-//new Conexion();
+$data = json_decode(file_get_contents('php://input'), true);
 
 // Creamos una nueva instancia del DAO para hacer la consulta
 $daoEntity = new EntityDao();

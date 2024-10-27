@@ -165,15 +165,27 @@ class EntityDao
             ["status" => "exito", "mensaje" => "Se eliminó correctamente"] :
             ["status" => "error", "mensaje" => "Ha habido algun error al eliminar.. "];
     }
+    // public function deleteRow($nombreTabla, $campo)
+    // {
+
+    //     $sql = "DELETE FROM $nombreTabla WHERE $campo = ?";
+    //     $sentencia = $this->conexion->prepare($sql);
+    //     $sentencia->bind_param('i', $id);
+
+    //     $eliminado = $sentencia->execute();
+
+
+    //     return $eliminado ?
+    //         ["status" => "exito", "mensaje" => "Se eliminó correctamente"] :
+    //         ["status" => "error", "mensaje" => "Ha habido algun error al eliminar.. "];
+    // }
 
     public function editEntity($id, $nombreTabla, $entidadActualizada)
     {
-
-
         if (empty($entidadActualizada)) {
 
             return [
-                "status" => "",
+                "status" => "error",
                 "mensaje" => "No se ha proporcionado datos para actualizar"
             ];
         }

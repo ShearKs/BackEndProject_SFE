@@ -11,6 +11,53 @@ class UsuariosDao extends EntityDao
     }
 
 
+    //Para autenticación y registro-----
+    public function login($usuario, $contrasena)
+    {
+
+        //Hacemos una consulta a la base de datos al usuario 
+        $sql = "SELECT u.id,u.nombre_usuario, u.contrasena, u.nombre, u.apellidos, u.telefono, u.email, u.fecha_nac,
+                    
+                    CASE 
+                        WHEN c.id IS NOT NULL THEN 'cliente'
+                        WHEN t.id IS NOT NULL THEN 'trabajador'
+                        ELSE 'desconocido'
+                    END AS tipo_usuario
+                FROM usuarios u
+                LEFT JOIN clientes c ON u.id = c.usuario_id
+                LEFT JOIN trabajadores t ON u.id = t.usuario_id
+                WHERE u.nombre_usuario = ? AND u.estado = 'activo' ";
+        $setencia = $this->conexion->prepare($sql);
+        $setencia->bind_param("s", $usuario);
+
+        $estado = $setencia->execute();
+        $resultado = $setencia->get_result();
+
+        if ($estado != null && $resultado->num_rows == 1) {
+
+            //Hay un usuario con ese nombre
+            $usuario = $resultado->fetch_assoc();
+
+            //Contraseña del usuario
+            $contrasenaBdd = $usuario['contrasena'];
+
+            if ($contrasenaBdd === $contrasena) {
+
+                //Eliminamos la contraseña ya que se la vamos a pasar al cliente y estará visible
+                unset($usuario['contrasena']);
+
+                return ["success" => true, "user" => json_encode($usuario), "token" => base64_encode(random_bytes(16))];
+            }
+
+            return ["success" => false, "message" => "Has introducido mal la contraseña"];
+        } else {
+            return ["success" => false, "message" => "No existe ningún usuario con ese nombre.."];
+        }
+    }
+
+
+    public function registro() {}
+
     public function getUsuarios()
     {
         $usuarios = [];
@@ -37,10 +84,11 @@ class UsuariosDao extends EntityDao
         return $usuarios;
     }
 
+    //registro para el crud de usuarios....
     public function insertarUsuario($tabla, $datosUsuario)
     {
 
-    
+
         $camposDeseados = ['nombre_usuario', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_nac'];
         $infoUser = [];
         $infoAdicional = [];
@@ -73,15 +121,12 @@ class UsuariosDao extends EntityDao
     }
 
     //Igual que hemos con el delete vamos a tener que hacer algo parecido ya que no nos va servir el método básico para actualizar "editEntity"
-    public function actualizarUsuario($tabla, $datosUserUp)
+    public function actualizarUsuario($datosUserUp)
     {
-        $this->beginTransaction();
+        //$this->beginTransaction();
 
         //Obtenemos el id del usuario que vamos a actualizar
         $id = $datosUserUp['id'];
-
-        //el id del usuario si es trabajador o cliente
-        $idUsuario = $datosUserUp['usuario_id'];
 
         $tablaAdicional = $datosUserUp['tipo_usuario'] === 'cliente' ? 'clientes' : 'trabajadores';
 
@@ -100,7 +145,7 @@ class UsuariosDao extends EntityDao
         }
 
         //Actualizamos en la tabla de Usuarios todos los cambios que vayamos a hacer..
-        $usuariosUpdate = $this->editEntity($id, $tabla, $infoUser);
+        $usuariosUpdate = $this->editEntity($id, 'usuarios', $infoUser);
 
         if ($usuariosUpdate["status"] === 'exito') {
 
@@ -113,7 +158,7 @@ class UsuariosDao extends EntityDao
                 $tablaUpdate = ($tablaAdicional === 'clientes') ? 'trabjadores' : 'clientes';
 
                 //Primero eliminamos en la tabla donde estaba
-                $mensajeElim = $this->deleteById($idUsuario, $tablaUpdate);
+                $mensajeElim = $this->deleteById($id, $tablaUpdate);
 
                 if ($mensajeElim['status'] !== 'exito') {
                     return ['status' => 'error', 'mensaje' => 'Ha habido algún error a eliminar el tipo de usuario antiguo...'];
@@ -126,13 +171,13 @@ class UsuariosDao extends EntityDao
 
                     return ['status' => 'error', 'mensaje' => 'Ha habido algún error al insertar el tipo de usuario...'];
                 }
-
-                //Si está todo bien hacemos todos los cambios...
-                $this->conexion->commit();
-                return ['status' => 'exito', 'mensaje' => 'Se ha conseguido editar el usuario de forma satisfactoria!'];
-            } else {
-                return ['status' => 'error', 'mensaje' => 'Ha habido algún error a actualizar el usuario...'];
             }
+
+            //Si está todo bien hacemos todos los cambios...
+            //$this->conexion->commit();
+            return ['status' => 'exito', 'mensaje' => 'Se ha conseguido editar el usuario de forma satisfactoria!'];
+        } else {
+            return ['status' => 'error', 'mensaje' => 'Ha habido algún error a actualizar el usuario...'];
         }
     }
 }
