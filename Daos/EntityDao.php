@@ -259,6 +259,34 @@ class EntityDao
         return preg_match('/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/', $valor) === 1;
     }
 
+
+
+    //Función que devuelve todos los campos que tiene una tabla...
+    public function getProperties($tabla, $camposNoDeseados = [])
+    {
+        $propiedades = [];
+
+        //show columns no permite el uso de ?..
+        $sql = "SHOW COLUMN FROM $tabla ";
+        $resultado = $this->conexion->query($sql);
+
+
+        if ($resultado->num_rows > 0) {
+            while ($fila = $resultado->fetch_assoc()) {
+                //Recogemos todas las columnas menos el id
+                if ($fila['Field'] !== 'id' && !in_array($fila['Field'], $camposNoDeseados)) {
+                    $propiedades[] = $fila['Field'];
+                }
+            }
+        } else {
+            echo "Error al obtener las columnas de la tabla.. : " . $this->conexion->error;
+        }
+        return $propiedades;
+    }
+
+
+
+
     //Función que se encarga de obtener todas las relaciones de una tabla...
     private function getRelations($tabla)
     {

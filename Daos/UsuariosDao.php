@@ -88,6 +88,15 @@ class UsuariosDao extends EntityDao
     public function insertarUsuario($tabla, $datosUsuario)
     {
 
+        //Lo primero de todo antes de insertar a un usuario comprobamos que no existe...
+        if ($this->existeUser($datosUsuario['nombre_usuario'])) {
+            return ['error ' => 'No se ha podido insertar ese usuario ya existe en la aplicación'];
+        }
+
+        //En vez de hacer esto a pelo..... , utilizar la función getProperties mejor y si hay algún campo que tampoco queramos que tenga pues se le pasa....
+
+        $camposDeseados = $this->getProperties($tabla);
+
 
         $camposDeseados = ['nombre_usuario', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_nac'];
         $infoUser = [];
@@ -179,5 +188,20 @@ class UsuariosDao extends EntityDao
         } else {
             return ['status' => 'error', 'mensaje' => 'Ha habido algún error a actualizar el usuario...'];
         }
+    }
+
+
+    //Función que comprueba si existe el usuario..
+    private function existeUser($nombreUsuario)
+    {
+
+        $sql = "SELECT id FROM usuarios WHERE nombre_usuario = ? ";
+        $setencia = $this->conexion->prepare($nombreUsuario);
+        $setencia->bind_param("s", $nombreUsuario);
+
+        $estado = $setencia->execute();
+        $resultado = $setencia->get_result();
+
+        return ($estado && $resultado->num_rows > 0);
     }
 }
