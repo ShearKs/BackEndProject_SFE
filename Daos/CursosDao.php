@@ -18,13 +18,15 @@ class CursosDao extends EntityDao
 
         $cursos = [];
         $sql = "SELECT 
+                    c.id,
                     c.nombre,
-                    c.icono_curso,
+                    c.icono_curso as 'icono',
+                    c.descripcion as 'informacion',
                     d.nombre AS deporte,
                     EXISTS (
                         SELECT id
                         FROM inscripciones_cursos ic 
-                        WHERE ic.idCurso = c.id AND ic.idCliente = 46) AS esta_inscrito
+                        WHERE ic.idCurso = c.id AND ic.idCliente = ? ) AS esta_inscrito
                 FROM 
                     cursos c
                 INNER JOIN 

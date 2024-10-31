@@ -24,25 +24,21 @@ $cursos = new CursosDao();
 $result = '';
 $modo = '';
 
-// Verifica el método de la solicitud
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Si es GET, se espera un parámetro 'modo'
-    $modo = $_GET['modo'] ?? '';
-} else {
-    // Para otros métodos, se espera recibir datos en el cuerpo
-    $data = json_decode(file_get_contents('php://input'), true);
-    $modo = $data['modo'] ?? '';
 
-    // Datos de la inscripción
-    $idCliente = $data['inscripcion']['idCliente'] ?? null;
-    $idCurso = $data['inscripcion']['idCurso'] ?? null;
-    //$inscripcion = $data['inscripcion'] ?? null;
-}
+// Para otros métodos, se espera recibir datos en el cuerpo
+$data = json_decode(file_get_contents('php://input'), true);
+$modo = $data['modo'] ?? '';
+
+// Datos de la inscripción
+$idCliente = $data['inscripcion']['idCliente'] ?? $data['idCliente'];
+$idCurso = $data['inscripcion']['idCurso'] ?? null;
+//$inscripcion = $data['inscripcion'] ?? null;
+
 
 // Switch para manejar las diferentes operaciones según el modo
 switch ($modo) {
     case 'getCurso':
-        $result = $cursos->getCursos();
+        $result = $cursos->getCursos($idCliente);
         break;
     case 'addInscripcion':
         // Verificar que ambos IDs estén disponibles antes de proceder
