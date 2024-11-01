@@ -17,11 +17,7 @@ class CursosDao extends EntityDao
     {
 
         $cursos = [];
-        $sql = "SELECT 
-                    c.id,
-                    c.nombre,
-                    c.icono_curso as 'icono',
-                    c.descripcion as 'informacion',
+        $sql = "SELECT c.id,c.nombre,c.icono_curso,c.plazas,c.descripcion as 'informacion',
                     d.nombre AS deporte,
                     EXISTS (
                         SELECT id

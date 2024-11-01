@@ -30,9 +30,10 @@ $data = json_decode(file_get_contents('php://input'), true);
 $modo = $data['modo'] ?? '';
 
 // Datos de la inscripción
-$idCliente = $data['inscripcion']['idCliente'] ?? $data['idCliente'];
+$idCliente = $data['inscripcion']['idCliente'] ?? $data['idCliente'] ?? null;
 $idCurso = $data['inscripcion']['idCurso'] ?? null;
 //$inscripcion = $data['inscripcion'] ?? null;
+
 
 
 // Switch para manejar las diferentes operaciones según el modo
@@ -43,8 +44,6 @@ switch ($modo) {
     case 'addInscripcion':
         // Verificar que ambos IDs estén disponibles antes de proceder
         if ($idCliente && $idCurso) {
-
-
             //$result = $cursos->inscripcionCurso($idCliente, $idCurso);
             $result = $cursos->insertEntity('inscripciones_cursos', ['idCliente' => $idCliente, 'idCurso' => $idCurso]);
         } else {
@@ -52,7 +51,8 @@ switch ($modo) {
         }
         break;
     case 'addCurso':
-        // Llamar a la función para añadir un curso (implementarla en CursosDao)
+        $nuevoCurso = $data['nuevoCurso'];
+        $result = $cursos->insertEntity('cursos', $nuevoCurso);
         break;
     default:
         $result = ['error' => 'Modo no válido'];
