@@ -41,7 +41,7 @@ switch ($modo) {
         $mensajeAuth = $daoUsuario->login($userName, $contrasena);
         break;
     case 'registro':
-        $datos['tipo_usuario'][] = 'cliente';
+        $datos['tipo_usuario'] = 'cliente';
         $mensajeAuth = $daoUsuario->insertarUsuario('usuarios',$datos);
         break;
     default:        

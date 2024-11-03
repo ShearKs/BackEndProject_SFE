@@ -57,9 +57,6 @@ class UsuariosDao extends EntityDao
         }
     }
 
-
-    public function registro() {}
-
     public function getUsuarios()
     {
         $usuarios = [];
@@ -95,8 +92,6 @@ class UsuariosDao extends EntityDao
             return ['error ' => 'No se ha podido insertar ese usuario ya existe en la aplicación'];
         }
 
-        //En vez de hacer esto a pelo..... , utilizar la función getProperties mejor y si hay algún campo que tampoco queramos que tenga pues se le pasa....
-
         $camposDeseados = $this->getProperties($tabla);
 
         $contrasena = $datosUsuario['contrasena'];
@@ -119,7 +114,9 @@ class UsuariosDao extends EntityDao
 
         // Obtener el tipo de usuario (cliente o trabajador) y formar el nombre de la tabla
         $tipoUsuario = $datosUsuario['tipo_usuario'];
-        $tablaAdicional = $tipoUsuario === 'cliente' ? 'clientes' : 'trabajadores';
+
+        $tablaAdicional = ($tipoUsuario === 'cliente' ) ? 'clientes' : 'trabajadores';
+
 
         // Insertar en la tabla de usuarios
         $insertUser = $this->insertEntity($tabla, $infoUser);
