@@ -89,7 +89,8 @@ class UsuariosDao extends EntityDao
 
         //Lo primero de todo antes de insertar a un usuario comprobamos que no existe...
         if ($this->existeUser($datosUsuario['nombre_usuario'])) {
-            return ['error ' => 'No se ha podido insertar ese usuario ya existe en la aplicación'];
+            return ['status' => 'error',
+                    'mensaje' => 'No se ha podido insertar ese usuario ya existe en la aplicación'];
         }
 
         $camposDeseados = $this->getProperties($tabla);
@@ -119,16 +120,17 @@ class UsuariosDao extends EntityDao
 
 
         // Insertar en la tabla de usuarios
-        $insertUser = $this->insertEntity($tabla, $infoUser);
+        $mensajeInsert = $this->insertEntity($tabla, $infoUser);
 
         // Si la inserción del usuario fue exitosa, proceder a insertar en la tabla adicional
-        if ($insertUser['status'] === 'exito') {
+        if ($mensajeInsert['status'] === 'exito') {
             // Insertar en la tabla correspondiente (clientes o trabajadores) con el ID de usuario recién insertado
-            $insertOther = $this->insertEntity($tablaAdicional, ['usuario_id' => $insertUser['id_insert']]);
+            $insertOther = $this->insertEntity($tablaAdicional, ['usuario_id' => $mensajeInsert['id_insert']]);
             return $insertOther;
         } else {
             $this->rollback();
-            return ['error' => "Ha habido algún error al insertar el usuario en la tabla."];
+            return ['status' => "error",
+                    'mensaje' => "Ha habido algún error al insertar el usuario en la tabla." ];
         }
     }
 
