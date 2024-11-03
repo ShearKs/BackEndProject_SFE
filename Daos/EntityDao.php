@@ -201,6 +201,7 @@ class EntityDao
         //Obtenemos los tipos de datos actualizar
         $tipos = implode('', $this->tiposArray($entidadActualizada)) . 'i';
 
+
         //Vinculamos los valores y el id
         $valores = array_merge(array_values($entidadActualizada), [$id]);
         $sentencia->bind_param($tipos, ...$valores);
@@ -266,25 +267,25 @@ class EntityDao
     {
         $propiedades = [];
 
-        //show columns no permite el uso de ?..
-        $sql = "SHOW COLUMN FROM $tabla ";
+        // Consulta corregida: "SHOW COLUMNS" en lugar de "SHOW COLUMN"
+        $sql = "SHOW COLUMNS FROM $tabla";
         $resultado = $this->conexion->query($sql);
 
-
-        if ($resultado->num_rows > 0) {
-            while ($fila = $resultado->fetch_assoc()) {
-                //Recogemos todas las columnas menos el id
-                if ($fila['Field'] !== 'id' && !in_array($fila['Field'], $camposNoDeseados)) {
-                    $propiedades[] = $fila['Field'];
+        if ($resultado) { // Verificamos que $resultado no sea falso
+            if ($resultado->num_rows > 0) {
+                while ($fila = $resultado->fetch_assoc()) {
+                    // Excluimos la columna 'id' y las columnas no deseadas
+                    if ($fila['Field'] !== 'id' && !in_array($fila['Field'], $camposNoDeseados)) {
+                        $propiedades[] = $fila['Field'];
+                    }
                 }
             }
         } else {
-            echo "Error al obtener las columnas de la tabla.. : " . $this->conexion->error;
+            echo "Error al obtener las columnas de la tabla: " . $this->conexion->error;
         }
+
         return $propiedades;
     }
-
-
 
 
     //Función que se encarga de obtener todas las relaciones de una tabla...

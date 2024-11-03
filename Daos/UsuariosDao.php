@@ -41,7 +41,9 @@ class UsuariosDao extends EntityDao
             //Contraseña del usuario
             $contrasenaBdd = $usuario['contrasena'];
 
-            if ($contrasenaBdd === $contrasena) {
+
+            if (password_verify($contrasena, $contrasenaBdd)) {
+
 
                 //Eliminamos la contraseña ya que se la vamos a pasar al cliente y estará visible
                 unset($usuario['contrasena']);
@@ -97,8 +99,10 @@ class UsuariosDao extends EntityDao
 
         $camposDeseados = $this->getProperties($tabla);
 
+        $contrasena = $datosUsuario['contrasena'];
+        //Hacemos que la contraseña se pase como encriptada
+        $contrasenaEncriptada = password_hash($contrasena, PASSWORD_BCRYPT);
 
-        $camposDeseados = ['nombre_usuario', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_nac'];
         $infoUser = [];
         $infoAdicional = [];
 
@@ -110,6 +114,8 @@ class UsuariosDao extends EntityDao
                 $infoAdicional[$indice] = $valor;
             }
         }
+
+        $infoUser['contrasena'] = $contrasenaEncriptada;
 
         // Obtener el tipo de usuario (cliente o trabajador) y formar el nombre de la tabla
         $tipoUsuario = $datosUsuario['tipo_usuario'];
@@ -196,7 +202,7 @@ class UsuariosDao extends EntityDao
     {
 
         $sql = "SELECT id FROM usuarios WHERE nombre_usuario = ? ";
-        $setencia = $this->conexion->prepare($nombreUsuario);
+        $setencia = $this->conexion->prepare($sql);
         $setencia->bind_param("s", $nombreUsuario);
 
         $estado = $setencia->execute();

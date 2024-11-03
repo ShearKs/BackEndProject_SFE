@@ -54,6 +54,18 @@ switch ($modo) {
         $nuevoCurso = $data['nuevoCurso'];
         $result = $cursos->insertEntity('cursos', $nuevoCurso);
         break;
+
+    case  'editarCurso':
+        $cursoEditado = $data['cursoEditado'];
+        $idCurso = $cursoEditado['id'];
+        $result = $cursos->editEntity($idCurso, 'cursos', $cursoEditado);
+        break;
+
+    case 'eliminarCurso':
+        $idCurso = $data['idCurso'];
+        $result = $cursos->deleteById($idCurso, 'cursos');
+        break;
+
     default:
         $result = ['error' => 'Modo no válido'];
         break;
