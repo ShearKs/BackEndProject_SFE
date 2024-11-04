@@ -109,11 +109,35 @@ class EntityDao
     }
 
 
-    //Función para obtener los campos de una entidad
-    public function getFields()
+    //Función destinada para obtener los valores de una tabla con el id de la Relación
+    public function getByExternalId($tabla, $fieldName, $value)
     {
-        return null;
+        $registros = [];
+    
+        // Consulta SQL con interpolación de tabla y columna, usando ? para el valor
+        $sql = "SELECT * FROM `$tabla` WHERE `$fieldName` = ?";
+        $sentencia = $this->conexion->prepare($sql);
+    
+        if (!$sentencia) {
+            ["status" => "error", "mensaje" => "Error en la preparación de la consulta : ", $this->conexion->error];
+        }
+    
+        // Bind del parámetro (usando "i" para enteros, o cambiar a "s" si es cadena)
+        $sentencia->bind_param("i", $value);
+    
+        $estado = $sentencia->execute();
+        $resultado = $sentencia->get_result();
+    
+        if ($estado && $resultado->num_rows > 0) {
+            while ($fila = $resultado->fetch_assoc()) {
+                $registros[] = $fila;
+            }
+        }
+    
+        $sentencia->close();
+        return $registros;
     }
+
 
     //Método para insertar un registro en una tabla
     public function insertEntity($tabla, $data)
@@ -165,20 +189,7 @@ class EntityDao
             ["status" => "exito", "mensaje" => "Se eliminó correctamente"] :
             ["status" => "error", "mensaje" => "Ha habido algun error al eliminar.. "];
     }
-    // public function deleteRow($nombreTabla, $campo)
-    // {
 
-    //     $sql = "DELETE FROM $nombreTabla WHERE $campo = ?";
-    //     $sentencia = $this->conexion->prepare($sql);
-    //     $sentencia->bind_param('i', $id);
-
-    //     $eliminado = $sentencia->execute();
-
-
-    //     return $eliminado ?
-    //         ["status" => "exito", "mensaje" => "Se eliminó correctamente"] :
-    //         ["status" => "error", "mensaje" => "Ha habido algun error al eliminar.. "];
-    // }
 
     public function editEntity($id, $nombreTabla, $entidadActualizada)
     {

@@ -4,10 +4,14 @@ include_once '../config/cors.php';
 
 include_once '../Daos/ReservasDao.php';
 
+
+//Definimos una constante de la tabla
+define('TABLA_PISTAS', 'pistas');
+
 $data = json_decode(file_get_contents('php://input'), true);
 
 $modo = $data['modo'];
-$idDeporte = $data['idDeporte'];
+$idDeporte = $data['idDeporte'] ?? null;
 
 $daoReservas = new ReservasDao();
 $result = [];
@@ -15,18 +19,26 @@ $result = [];
 switch ($modo) {
 
     case 'getReservas':
-        //Obetenemos las reservas para ese deporte
-        $result = $daoReservas->getReservaDeporte($idDeporte, null);
+        //Obetenemos las reservas para ese deporte y esa determinada fecha
+
+        $fechaReserva = $data['fecha'];
+        $result = $daoReservas->getReservaDeporte($idDeporte, $fechaReserva);
         break;
     case 'getPistas':
-        $result = 'hola';
+        $result = $daoReservas->getByExternalId(TABLA_PISTAS, 'idDeporte', $idDeporte);
         break;
+
+    case 'getHorario':
+        $result = $daoReservas->getHorarioDeporte($idDeporte);
+        break;
+
+    case 'hacerReserva':
+        $reserva = $data['reserva'];
+        $result = $daoReservas->insertEntity('reservas', $reserva);
+        break;
+
     default:
         $result = ["error" => "Modo no soportado"];
 }
 
 echo json_encode($result);
-
-
-
-
