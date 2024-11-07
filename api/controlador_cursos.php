@@ -51,7 +51,10 @@ switch ($modo) {
         break;
 
     default:
-        $result = ['error' => 'Modo no válido'];
+        $result = [
+            'status' => "error",
+            'mensaje' => "Modo no valido"
+        ];
         break;
 }
 

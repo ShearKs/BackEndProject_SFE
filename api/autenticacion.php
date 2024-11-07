@@ -19,6 +19,7 @@ switch ($modo) {
     case 'login':
         $userName = $datos['username'];
         $contrasena = $datos['password'];
+        //Mensaje de autenticación que devuelve también a parte del mensaje de exito, el usuario...
         $mensajeAuth = $daoUsuario->login($userName, $contrasena);
         break;
     case 'registro':

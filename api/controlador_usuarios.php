@@ -20,6 +20,7 @@ include_once '../Daos/UsuariosDao.php';
 // include_once '../Daos/EntityDao.php';
 include_once '../Daos/Conexion.php';
 
+define('TABLA_USUARIOS', 'usuarios');
 
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -47,7 +48,7 @@ switch ($modoCrud) {
         break;
     case 'delete':
         $usuarioDao->beginTransaction();
-        $resultado = $usuarioDao->deleteById($id, "usuarios");
+        $resultado = $usuarioDao->deleteById($id, TABLA_USUARIOS);
         $usuarioDao->commit();
         break;
 

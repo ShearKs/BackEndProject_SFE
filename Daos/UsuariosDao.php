@@ -44,7 +44,6 @@ class UsuariosDao extends EntityDao
 
             if (password_verify($contrasena, $contrasenaBdd)) {
 
-
                 //Eliminamos la contraseña ya que se la vamos a pasar al cliente y estará visible
                 unset($usuario['contrasena']);
 
@@ -56,6 +55,8 @@ class UsuariosDao extends EntityDao
             return ["success" => false, "message" => "No existe ningún usuario con ese nombre.."];
         }
     }
+
+    
 
     public function getUsuarios()
     {

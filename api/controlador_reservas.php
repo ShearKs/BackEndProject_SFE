@@ -7,6 +7,7 @@ include_once '../Daos/ReservasDao.php';
 
 //Definimos una constante de la tabla
 define('TABLA_PISTAS', 'pistas');
+define('TABLA_RESERVAS', 'reservas');
 
 $data = json_decode(file_get_contents('php://input'), true);
 
@@ -34,7 +35,7 @@ switch ($modo) {
 
     case 'hacerReserva':
         $reserva = $data['reserva'];
-        $result = $daoReservas->insertEntity('reservas', $reserva);
+        $result = $daoReservas->insertEntity(TABLA_RESERVAS, $reserva);
         break;
 
     default:
