@@ -17,8 +17,16 @@ switch ($modo) {
 
     case 'getEventos':
 
-        $result = $daoEventos->getEntity( 'eventos'  ,false);
+        $result = $daoEventos->getEntity('eventos', false);
         break;
+
+    case 'addEvento':
+        //Evento nuevo que vamos a insertar..
+
+        $evento = $data['data']['evento'];
+        $result = $daoEventos->insertEntity('eventos',$evento);
+        break;
+
     default:
         $result = [
             'status' => "error",
