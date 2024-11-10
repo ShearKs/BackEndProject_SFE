@@ -16,17 +16,36 @@ $result = '';
 switch ($modo) {
 
     case 'getEventos':
+        $idCliente = $data['data']['idCliente'];
 
-        $result = $daoEventos->getEntity('eventos', false);
+        //$result = $daoEventos->getEntity('eventos',false);
+        $result = $daoEventos->getEventos($idCliente);
         break;
 
     case 'addEvento':
         //Evento nuevo que vamos a insertar..
 
         $evento = $data['data']['evento'];
-        $result = $daoEventos->insertEntity('eventos',$evento);
+        $result = $daoEventos->insertEntity('eventos', $evento);
         break;
 
+    case 'deleteEvento':
+        $idEvento = $data['data']['idEvento'];
+        $result = $daoEventos->deleteById($idEvento, 'eventos');
+        break;
+
+    case 'editEvento':
+        $evento = $data['data']['evento'];
+        $idEvento = $evento['id'];
+        $result = $daoEventos->editEntity($idEvento, 'eventos', $evento);
+        break;
+
+    case 'inscripcion':
+
+
+        $inscripcion = $data['data']['inscripcion'];
+        $result = $daoEventos->insertEntity('inscripciones_eventos', $inscripcion);
+        break;
     default:
         $result = [
             'status' => "error",

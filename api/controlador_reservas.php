@@ -36,6 +36,10 @@ switch ($modo) {
     case 'hacerReserva':
         $reserva = $data['reserva'];
         $result = $daoReservas->insertEntity(TABLA_RESERVAS, $reserva);
+
+        // if($result['status'] === 'exito'){
+        //     $daoReservas->utils->enviarCorreo();
+        // }
         break;
 
     default:

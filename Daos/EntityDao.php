@@ -1,10 +1,15 @@
 <?php
 
 include_once 'Conexion.php';
+include_once '../Models/Utilidades.php';
+
+
 
 class EntityDao
 {
     protected $conexion;
+
+    public $utils;
 
     public function __construct()
     {
@@ -13,6 +18,8 @@ class EntityDao
 
         //De forma predterminada no podremos hacer cambios...
         //$this->conexion->autocommit(false);
+
+        $this->utils = new Utilidades();
     }
 
     public function getEntity($tabla, $completo)
@@ -177,18 +184,18 @@ class EntityDao
 
     public function deleteById($id, $nombreTabla)
     {
-
         $sql = "DELETE FROM $nombreTabla WHERE id = ?";
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->bind_param('i', $id);
-
-        $eliminado = $sentencia->execute();
-
-
-        return $eliminado ?
+    
+        $sentencia->execute();
+        $filasAfectadas = $sentencia->affected_rows;
+    
+        return $filasAfectadas > 0 ?
             ["status" => "exito", "mensaje" => "Se eliminó correctamente"] :
-            ["status" => "error", "mensaje" => "Ha habido algun error al eliminar.. "];
+            ["status" => "error", "mensaje" => "No se encontró el registro a eliminar o ha habido algún error"];
     }
+    
 
 
     public function editEntity($id, $nombreTabla, $entidadActualizada)

@@ -24,7 +24,7 @@ switch ($modo) {
         break;
     case 'registro':
         $datos['tipo_usuario'] = 'cliente';
-        $mensajeAuth = $daoUsuario->insertarUsuario('usuarios',$datos);
+        $mensajeAuth = $daoUsuario->insertarUsuario($datos);
         break;
     default:        
 }

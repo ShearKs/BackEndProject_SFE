@@ -37,8 +37,7 @@ $usuarioDao = new UsuariosDao();
 switch ($modoCrud) {
 
     case 'create':
-
-        //$resultado = $usuarioDao->insertarUsuario($entityData);
+        $resultado = $usuarioDao->insertarUsuario($entityData);
         break;
     case 'read':
         $resultado = $usuarioDao->getUsuarios();

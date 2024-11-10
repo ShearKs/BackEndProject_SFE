@@ -16,7 +16,7 @@ class UsuariosDao extends EntityDao
     {
 
         //Hacemos una consulta a la base de datos al usuario 
-        $sql = "SELECT u.id,u.nombre_usuario, u.contrasena, u.nombre, u.apellidos, u.telefono, u.email, u.fecha_nac,
+        $sql = "SELECT u.id,u.nombre_usuario, u.contrasena, u.nombre, u.apellidos, u.telefono, u.email, u.fecha_nac,COALESCE(c.id, t.id) AS 'id_usuario',
                     
                     CASE 
                         WHEN c.id IS NOT NULL THEN 'cliente'
@@ -27,6 +27,7 @@ class UsuariosDao extends EntityDao
                 LEFT JOIN clientes c ON u.id = c.usuario_id
                 LEFT JOIN trabajadores t ON u.id = t.usuario_id
                 WHERE u.nombre_usuario = ? AND u.estado = 'activo' ";
+
         $setencia = $this->conexion->prepare($sql);
         $setencia->bind_param("s", $usuario);
 
@@ -56,7 +57,7 @@ class UsuariosDao extends EntityDao
         }
     }
 
-    
+
 
     public function getUsuarios()
     {
@@ -65,8 +66,8 @@ class UsuariosDao extends EntityDao
         $sql = "SELECT u.id, u.nombre_usuario, u.nombre, u.apellidos, u.email,u.telefono,u.fecha_add,u.fecha_nac,
                c.usuario_id,t.usuario_id,
             CASE 
-                WHEN c.usuario_id IS NOT NULL THEN 'Cliente' 
-                WHEN t.usuario_id IS NOT NULL THEN 'Trabajador' 
+                WHEN c.usuario_id IS NOT NULL THEN 'cliente' 
+                WHEN t.usuario_id IS NOT NULL THEN 'trabajador' 
             END AS tipo_usuario
         FROM usuarios u
         LEFT JOIN clientes c ON u.id = c.usuario_id
@@ -85,16 +86,18 @@ class UsuariosDao extends EntityDao
     }
 
     //registro para el crud de usuarios....
-    public function insertarUsuario($tabla, $datosUsuario)
+    public function insertarUsuario($datosUsuario)
     {
 
         //Lo primero de todo antes de insertar a un usuario comprobamos que no existe...
         if ($this->existeUser($datosUsuario['nombre_usuario'])) {
-            return ['status' => 'error',
-                    'mensaje' => 'No se ha podido insertar ese usuario ya existe en la aplicación'];
+            return [
+                'status' => 'error',
+                'mensaje' => 'No se ha podido insertar ese usuario ya existe en la aplicación'
+            ];
         }
 
-        $camposDeseados = $this->getProperties($tabla);
+        $camposDeseados = $this->getProperties('usuarios');
 
         $contrasena = $datosUsuario['contrasena'];
         //Hacemos que la contraseña se pase como encriptada
@@ -117,11 +120,11 @@ class UsuariosDao extends EntityDao
         // Obtener el tipo de usuario (cliente o trabajador) y formar el nombre de la tabla
         $tipoUsuario = $datosUsuario['tipo_usuario'];
 
-        $tablaAdicional = ($tipoUsuario === 'cliente' ) ? 'clientes' : 'trabajadores';
+        $tablaAdicional = ($tipoUsuario === 'cliente') ? 'clientes' : 'trabajadores';
 
 
         // Insertar en la tabla de usuarios
-        $mensajeInsert = $this->insertEntity($tabla, $infoUser);
+        $mensajeInsert = $this->insertEntity('usuarios', $infoUser);
 
         // Si la inserción del usuario fue exitosa, proceder a insertar en la tabla adicional
         if ($mensajeInsert['status'] === 'exito') {
@@ -130,8 +133,10 @@ class UsuariosDao extends EntityDao
             return $insertOther;
         } else {
             $this->rollback();
-            return ['status' => "error",
-                    'mensaje' => "Ha habido algún error al insertar el usuario en la tabla." ];
+            return [
+                'status' => "error",
+                'mensaje' => "Ha habido algún error al insertar el usuario en la tabla."
+            ];
         }
     }
 
@@ -161,6 +166,7 @@ class UsuariosDao extends EntityDao
 
         //Actualizamos en la tabla de Usuarios todos los cambios que vayamos a hacer..
         $usuariosUpdate = $this->editEntity($id, 'usuarios', $infoUser);
+
 
         if ($usuariosUpdate["status"] === 'exito') {
 
