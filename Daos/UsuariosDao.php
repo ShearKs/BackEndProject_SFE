@@ -130,6 +130,14 @@ class UsuariosDao extends EntityDao
         if ($mensajeInsert['status'] === 'exito') {
             // Insertar en la tabla correspondiente (clientes o trabajadores) con el ID de usuario recién insertado
             $insertOther = $this->insertEntity($tablaAdicional, ['usuario_id' => $mensajeInsert['id_insert']]);
+
+            $this->utils->enviarCorreo(
+                $datosUsuario['email'],"Registro en ARD App!",
+                "¡Gracias por registrarte! " . $datosUsuario['nombre'] . "! \nTe has inscrito con el usuario : " .
+                    $datosUsuario['nombre_usuario'] . " y contraseña: " . $datosUsuario['contrasena'],
+                "Correo de prueba"
+            );
+
             return $insertOther;
         } else {
             $this->rollback();

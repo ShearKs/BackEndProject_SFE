@@ -27,12 +27,24 @@ switch ($modo) {
         break;
     case 'addInscripcion':
         // Verificar que ambos IDs estén disponibles antes de proceder
-        if ($idCliente && $idCurso) {
-            //$result = $cursos->inscripcionCurso($idCliente, $idCurso);
-            $result = $cursos->insertEntity('inscripciones_cursos', ['idCliente' => $idCliente, 'idCurso' => $idCurso]);
-        } else {
-            $result = ['error' => 'Faltan datos para la inscripción'];
+        //$result = $cursos->inscripcionCurso($idCliente, $idCurso);
+
+
+        $idCliente = $data['data']['nuevaInscripcion']['idCliente'];
+        $usuario = $data['data']['usuario'];
+
+        $result = $cursos->insertEntity('inscripciones_cursos', ['idCliente' => $idCliente, 'idCurso' => $idCurso]);
+
+        if ($result['status'] === 'exito') {
+
+            $cursos->utils->enviarCorreo(
+                $usuario['email'],
+                "¡Te has inscrito a un curso de ARD!",
+                "Felicidades " . $usuario['nombre'] . " te has incrito a un curso",
+            );
         }
+
+
         break;
     case 'addCurso':
         $nuevoCurso = $data['nuevoCurso'];

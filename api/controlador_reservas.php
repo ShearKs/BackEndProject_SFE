@@ -34,12 +34,24 @@ switch ($modo) {
         break;
 
     case 'hacerReserva':
-        $reserva = $data['reserva'];
-        $result = $daoReservas->insertEntity(TABLA_RESERVAS, $reserva);
+        $usuario = $data['data']['usuario'];
+        $correo = $usuario['email'];
+        $reserva = $data['data']['reserva'];
 
-        // if($result['status'] === 'exito'){
-        //     $daoReservas->utils->enviarCorreo();
-        // }
+        $nuevaReserva = [
+            'fecha' => $reserva['fecha'],
+            'idHorario' => $reserva['idHorario'],
+            'idPista' => $reserva['idPista'],
+            'idCliente' => $reserva['idCliente']
+        ];
+
+
+        $result = $daoReservas->insertEntity(TABLA_RESERVAS, $nuevaReserva);
+
+        if ($result['status'] === 'exito') {
+            $daoReservas->utils->enviarCorreo($correo, "Reserva realizada!", "Enhorabuena has realizado una reserva!");
+            //$daoReservas->generarPDFReserva($reserva);
+        }
         break;
 
     default:

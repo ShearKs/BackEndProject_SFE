@@ -15,7 +15,7 @@ class EventosDao extends EntityDao
     {
 
         $eventos = [];
-        $sql = "SELECT e.id, e.nombre,e.hora_salida, d.nombre AS deporte_nombre,l.nombre AS 'lugar' ,l.latitud,l.longitud,   e.plazas_disponibles, e.descripcion, e.fecha_evento, e.distancia,e.idDeporte,
+        $sql = "SELECT e.id, e.nombre,DATE_FORMAT(e.hora_salida, '%H:%i') AS 'hora_salida', d.nombre AS deporte_nombre,l.nombre AS 'lugar' ,l.id as 'idLugar',l.latitud,l.longitud,e.plazas_disponibles, e.descripcion, e.fecha_evento, e.distancia,e.idDeporte,
                     
                     EXISTS (
                     		SELECT id
@@ -24,7 +24,8 @@ class EventosDao extends EntityDao
                     
                     FROM eventos e
                     INNER JOIN deportes d ON e.idDeporte = d.id
-                    INNER JOIN lugares l ON e.idLugar = l.id ";
+                    INNER JOIN lugares l ON e.idLugar = l.id 
+                    ORDER BY e.fecha_evento";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->bind_param('i',$idCliente);

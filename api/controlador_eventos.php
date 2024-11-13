@@ -44,7 +44,19 @@ switch ($modo) {
 
 
         $inscripcion = $data['data']['inscripcion'];
+        $nombreEvento = $inscripcion['nombreEvento'];
+        $correo = $data['data']['usuario']['email'];
+        unset($inscripcion['nombreEvento']);
         $result = $daoEventos->insertEntity('inscripciones_eventos', $inscripcion);
+
+        if ($result['status'] === 'exito') {
+            $daoEventos->utils->enviarCorreo(
+                $correo,
+                "¡Te has incrito en un evento deportivo!",
+                "Felicidades " . $data['data']['usuario']['nombre'] . " por tu inscripción a " . $nombreEvento,
+            );
+        }
+
         break;
     default:
         $result = [
