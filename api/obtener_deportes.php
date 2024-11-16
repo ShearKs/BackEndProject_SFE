@@ -1,12 +1,12 @@
 <?php
 
-include_once '../Daos/EntityDao.php';
 
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
+include_once '../config/cors.php';
+include_once '../Daos/DeportesDao.php';
 
-$daoEntity = new EntityDao();
 
-$resultado = $daoEntity->getEntity("deportes", false);
+$daoDeportes = new DeportesDao();
 
-echo json_encode($resultado);
+$deportes = $daoDeportes->getDeportes();
+
+echo json_encode($deportes);

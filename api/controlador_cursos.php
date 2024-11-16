@@ -15,7 +15,7 @@ $modo = $data['modo'] ?? '';
 
 // Datos de la inscripción
 $idCliente = $data['inscripcion']['idCliente'] ?? $data['idCliente'] ?? null;
-$idCurso = $data['inscripcion']['idCurso'] ?? null;
+$idCurso = $data['data']['nuevaInscripcion']['idCurso'] ?? null;
 //$inscripcion = $data['inscripcion'] ?? null;
 
 
@@ -28,7 +28,6 @@ switch ($modo) {
     case 'addInscripcion':
         // Verificar que ambos IDs estén disponibles antes de proceder
         //$result = $cursos->inscripcionCurso($idCliente, $idCurso);
-
 
         $idCliente = $data['data']['nuevaInscripcion']['idCliente'];
         $usuario = $data['data']['usuario'];
@@ -43,7 +42,6 @@ switch ($modo) {
                 "Felicidades " . $usuario['nombre'] . " te has incrito a un curso",
             );
         }
-
 
         break;
     case 'addCurso':
